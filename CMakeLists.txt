@@ -8,13 +8,14 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+aux_source_directory(./src DIR_SRC)
+
 set(PROJECT_SOURCES
 
-        src/head/head.h
-
-        src/head/sort.h
+        ${DIR_SRC}
         
         main.cpp
+        
 )
 
 if(ANDROID)

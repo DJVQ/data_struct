@@ -1,3 +1,4 @@
+_Pragma("once")
 #include "head.h"
 
 //二叉树节点
@@ -58,11 +59,13 @@ void visit(T data) {
     cout << "node:\t";
 }
 
+//判断二叉树是否为空
 template<typename T>
 bool binary_tree<T>::empty_() {
     return this->root == nullptr;
 }
 
+//遍历二叉树
 template<typename T>
 void binary_tree<T>::traverse(int key, void (*visit)(T)) {
     cout<<endl;
@@ -82,6 +85,7 @@ void binary_tree<T>::traverse(int key, void (*visit)(T)) {
     }
 }
 
+//先序遍历
 template<typename T>
 void binary_tree<T>::pre_order_traverse(binary_node<T>* node,void (*visit)(T)) {
     if(node) {
@@ -91,6 +95,7 @@ void binary_tree<T>::pre_order_traverse(binary_node<T>* node,void (*visit)(T)) {
     }
 }
 
+//中序遍历
 template<typename T>
 void binary_tree<T>::mid_order_traverse(binary_node<T>* node,void (*visit)(T)) {
     if(node) {
@@ -100,6 +105,7 @@ void binary_tree<T>::mid_order_traverse(binary_node<T>* node,void (*visit)(T)) {
     }
 }
 
+//后序遍历
 template<typename T>
 void binary_tree<T>::last_order_traverse(binary_node<T>* node,void (*visit)(T)) {
     if(node) {
@@ -109,6 +115,7 @@ void binary_tree<T>::last_order_traverse(binary_node<T>* node,void (*visit)(T)) 
     }
 }
 
+//层序遍历
 template <typename T>
 void binary_tree<T>::layer_order_traverse(void (* visit)(T)) {
     cout<<"total: "<<count<<endl;

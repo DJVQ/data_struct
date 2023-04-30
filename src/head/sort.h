@@ -1,3 +1,4 @@
+_Pragma("once")
 #include "head.h"
 
 //打印数组元素

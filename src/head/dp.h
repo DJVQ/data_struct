@@ -1,3 +1,4 @@
+_Pragma("once")
 #include "head.h"
 
 int count_ = 0;

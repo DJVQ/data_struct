@@ -1,3 +1,5 @@
+_Pragma("once")
+
 #include <iostream>
 #include <cstring>
 #include <random>
@@ -5,3 +7,7 @@
 #include <queue>
 #include <algorithm>
 using namespace std;
+
+static const int d = 100;
+
+
