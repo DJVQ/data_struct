@@ -5,11 +5,12 @@ _Pragma("once")
 template<typename T>
 struct binary_node{
     T val;
+    binary_node* parent;
     binary_node* left;
     binary_node* right;
-    binary_node() : left(nullptr), right(nullptr) {};
-    binary_node(T val_) : val(val_), left(nullptr), right(nullptr) {};
-    binary_node(T val_, binary_node* left_, binary_node* right_) : val(val), left(left_), right(right_) {};
+    binary_node() : left(nullptr), right(nullptr), parent(nullptr) {};
+    binary_node(T val_) : val(val_), left(nullptr), right(nullptr), parent(nullptr) {};
+    binary_node(T val_, binary_node* left_, binary_node* right_) : val(val), left(left_), right(right_), parent(nullptr) {};
 };
 
 //二叉树
@@ -21,6 +22,12 @@ class binary_tree{
         void mid_order_traverse(binary_node<T>* node,void (*visit)(T));
         void last_order_traverse(binary_node<T>* node,void (*visit)(T));
         void layer_order_traverse(void (*visit)(T));
+        void insert_node_BST(binary_node<T>* &parent, binary_node<T>* &node, T val_, bool (* cmp)(T, T));
+        binary_node<T>* left_rotate(binary_node<T>* &node);
+        binary_node<T>* right_rotate(binary_node<T>* &node);
+        binary_node<T>* left_right_rotate(binary_node<T>* node);
+        binary_node<T>* right_left_rotate(binary_node<T>* node);
+        void rebalance(binary_node<T>* &node);
     public:
         binary_node<T>* root;
         binary_tree() : root(nullptr), count(0) {};
@@ -28,7 +35,9 @@ class binary_tree{
         binary_tree(binary_node<T>*& root_, int count_) : root(root_), count(count_) {};
         bool empty_();
         void create_note_layer(auto it_b, auto it_e);
-        void traverse(int key, void (*visit)(T));
+        void traverse(int key, void (*visit_)(T));
+        void create_BST(vector<T> &elements_, bool (*cmp_)(T, T));
+        void trans_to_AVL(binary_node<T>* &node);
 };
 
 //层序遍历创建节点
@@ -43,11 +52,13 @@ void binary_tree<T>::create_note_layer(auto it_b, auto it_e) {
     while(it_b != it_e && !nodes_.empty()) {
         node_temp = nodes_.front();
         node_temp->left = new binary_node<T>(*it_b++);
+        node_temp->left->parent = node_temp;
         ++this->count;
         nodes_.pop();
         nodes_.push(node_temp->left);
         if(it_b == it_e) return;
         node_temp->right = new binary_node<T>(*it_b++);
+        node_temp->right->parent = node_temp;
         ++this->count;
         nodes_.push(node_temp->right);
     }
@@ -57,6 +68,12 @@ void binary_tree<T>::create_note_layer(auto it_b, auto it_e) {
 template <typename T>
 void visit(T data) {
     cout << "node:\t";
+}
+
+//节点访问模板函数
+template <typename T>
+bool cmp_(T data_1, T data_2) {
+    return data_1 < data_2;
 }
 
 //判断二叉树是否为空
@@ -133,4 +150,102 @@ void binary_tree<T>::layer_order_traverse(void (* visit)(T)) {
             queue[r++] = tmp -> right;
         }
     }
+}
+
+//左旋
+template<typename T>
+void change_parent(binary_node<T>* &node, binary_node<T>* &node_){
+    if(node->parent)
+        if(node->parent->left == node)
+            node->parent->left = node_;
+        else
+            node->parent->right = node_;
+}
+
+//左旋
+template<typename T>
+binary_node<T>* binary_tree<T>::left_rotate(binary_node<T>* &node){
+    binary_node<T>* node_ = node->right;
+    node->right = node_->left;
+    node_->left = node;
+    change_parent(node, node_);
+    return node_;
+}
+//右旋
+template<typename T>
+binary_node<T>* binary_tree<T>::right_rotate(binary_node<T>* &node){
+    binary_node<T>* node_ = node->left;
+    node->left = node_->right;
+    node_->right = node;
+    change_parent(node, node_);
+    return node_;
+}
+//左右旋
+template<typename T>
+binary_node<T>* binary_tree<T>::left_right_rotate(binary_node<T>* node){
+    node->left = right_rotate(node->left);
+    return left_rotate(node);
+}
+//有左旋
+template<typename T>
+binary_node<T>* binary_tree<T>::right_left_rotate(binary_node<T>* node){
+    node->left = left_rotate(node->left);
+    return right_rotate(node);
+}
+
+//向二叉排序树插入一个节点
+template <typename T>
+void binary_tree<T>::insert_node_BST(binary_node<T>* &parent_, binary_node<T>* &node, T val_, bool (* cmp)(T, T)) {
+    if (node) {
+        if(cmp(val_, node->val))
+            insert_node_BST(node, node->left, val_, cmp);
+        else
+            insert_node_BST(node, node->right, val_, cmp);
+    } else {
+        node = new binary_node<T>(val_); 
+        node->parent = parent_;
+        ++(this->count);
+    }
+}
+
+//转化为二叉排序树
+template <typename T>
+void binary_tree<T>::create_BST(vector<T> &elements_, bool (* cmp)(T, T)) {
+    for(int i = 0; i < elements_.size(); ++i) 
+        insert_node_BST(this->root, this->root, elements_[i], cmp);
+    cout<<this->count<<endl;
+}
+
+template<typename T>
+int get_height(binary_node<T>* node) {
+    if(node == nullptr) return -1;
+    return max(get_height(node->left), get_height(node->right)) + 1;
+}
+
+template<typename T>
+int balance_factor(binary_node<T>* node) {
+    return get_height(node->left) - get_height(node->right);
+}
+
+template<typename T>
+void binary_tree<T>::rebalance(binary_node<T>* &node){
+    int bf = get_height(node->left) - get_height(node->right);
+    if(bf > 1) {
+        if(balance_factor(node->left) < 0) 
+            left_rotate(node->left);
+        right_rotate(node);
+    } else if(bf < -1) {
+        cout<<balance_factor(node->right) <<endl;
+        if(balance_factor(node->right) > 0)
+            right_rotate(node->right);
+        left_rotate(node);
+    }
+}
+
+template<typename T>
+void binary_tree<T>::trans_to_AVL(binary_node<T>* &node){
+    if(node == nullptr) return;
+    trans_to_AVL(node->left);
+    trans_to_AVL(node->right);
+    rebalance(node);
 }
