@@ -5,12 +5,16 @@ _Pragma("once")
 template<typename T>
 struct binary_node{
     T val;
+    bool is_red;
     binary_node* parent;
     binary_node* left;
     binary_node* right;
-    binary_node() : left(nullptr), right(nullptr), parent(nullptr) {};
-    binary_node(T val_) : val(val_), left(nullptr), right(nullptr), parent(nullptr) {};
-    binary_node(T val_, binary_node* left_, binary_node* right_) : val(val), left(left_), right(right_), parent(nullptr) {};
+    binary_node() : 
+                is_red(true), left(nullptr), right(nullptr), parent(nullptr) {};
+    binary_node(T val_) : 
+                val(val_), is_red(true), left(nullptr), right(nullptr), parent(nullptr) {};
+    binary_node(T val_, binary_node* left_, binary_node* right_) : 
+                val(val_), is_red(true), left(left_), right(right_), parent(nullptr) {};
 };
 
 //二叉树
@@ -34,15 +38,17 @@ class binary_tree{
         binary_tree(binary_node<T>*& root_) : root(root_), count(0) {};
         binary_tree(binary_node<T>*& root_, int count_) : root(root_), count(count_) {};
         bool empty_();
-        void create_note_layer(auto it_b, auto it_e);
+        void create_node_layer(auto it_b, auto it_e);
         void traverse(int key, void (*visit_)(T));
         void create_BST(vector<T> &elements_, bool (*cmp_)(T, T));
-        void trans_to_AVL(binary_node<T>* &node);
+        void trans_BST_to_AVL(binary_node<T>* &node);
+        void trans_BST_to_RBT(binary_node<T>* &node);
+        void trans_AVL_to_RBT(binary_node<T>* &node);
 };
 
 //层序遍历创建节点
 template<typename T>
-void binary_tree<T>::create_note_layer(auto it_b, auto it_e) {
+void binary_tree<T>::create_node_layer(auto it_b, auto it_e) {
     if(it_b == it_e) return;
     queue<binary_node<T>*> nodes_;
     this->root = new binary_node<T>(*it_b++);
@@ -152,6 +158,48 @@ void binary_tree<T>::layer_order_traverse(void (* visit)(T)) {
     }
 }
 
+// //左旋
+// template<typename T>
+// binary_node<T>* binary_tree<T>::left_rotate(binary_node<T>* &node){
+//     binary_node<T>* node_ = node->right;
+//     if(!node_) return node_;
+//     node->right = node_->left;
+//     if (node_->left != nullptr) node_->left->parent = node;
+//     node_->parent = node->parent;
+//     if (node->parent == nullptr) {
+//         root = node_;
+//     } else if (node == node->parent->left) {
+//         node->parent->left = node_;
+//     } else {
+//         node->parent->right = node_;
+//     }
+//     node_->left = node;
+//     node->parent = node_;
+//     swap(node->is_red, node_->is_red);
+//     return node_;
+// }
+
+// //右旋
+// template<typename T>
+// binary_node<T>* binary_tree<T>::right_rotate(binary_node<T>* &node){
+//     binary_node<T>* node_ = node->left;
+//     if(!node_) return node_;
+//     node->left = node_->right;
+//     if (node_->right != nullptr) node_->right->parent = node;
+//     node_->parent = node->parent;
+//     if (node->parent == nullptr) {
+//         root = node_;
+//     } else if (node == node->parent->right) {
+//         node->parent->right = node_;
+//     } else {
+//         node->parent->left = node_;
+//     }
+//     node_->right = node;
+//     node->parent = node_;
+//     swap(node->is_red, node_->is_red);
+//     return node_;
+// }
+
 //左旋
 template<typename T>
 void change_parent(binary_node<T>* &node, binary_node<T>* &node_){
@@ -180,13 +228,14 @@ binary_node<T>* binary_tree<T>::right_rotate(binary_node<T>* &node){
     change_parent(node, node_);
     return node_;
 }
+
 //左右旋
 template<typename T>
 binary_node<T>* binary_tree<T>::left_right_rotate(binary_node<T>* node){
     node->left = right_rotate(node->left);
     return left_rotate(node);
 }
-//有左旋
+//右左旋
 template<typename T>
 binary_node<T>* binary_tree<T>::right_left_rotate(binary_node<T>* node){
     node->left = left_rotate(node->left);
@@ -213,20 +262,22 @@ template <typename T>
 void binary_tree<T>::create_BST(vector<T> &elements_, bool (* cmp)(T, T)) {
     for(int i = 0; i < elements_.size(); ++i) 
         insert_node_BST(this->root, this->root, elements_[i], cmp);
-    cout<<this->count<<endl;
 }
 
+//以当前节点为根节点，获取高度
 template<typename T>
 int get_height(binary_node<T>* node) {
     if(node == nullptr) return -1;
     return max(get_height(node->left), get_height(node->right)) + 1;
 }
 
+//计算节点左右子树的高度差
 template<typename T>
 int balance_factor(binary_node<T>* node) {
     return get_height(node->left) - get_height(node->right);
 }
 
+//通过左旋或者右旋使二叉树平衡
 template<typename T>
 void binary_tree<T>::rebalance(binary_node<T>* &node){
     int bf = get_height(node->left) - get_height(node->right);
@@ -235,17 +286,59 @@ void binary_tree<T>::rebalance(binary_node<T>* &node){
             left_rotate(node->left);
         right_rotate(node);
     } else if(bf < -1) {
-        cout<<balance_factor(node->right) <<endl;
         if(balance_factor(node->right) > 0)
             right_rotate(node->right);
         left_rotate(node);
     }
 }
 
+//将二叉排序树转化为二叉平衡树
 template<typename T>
-void binary_tree<T>::trans_to_AVL(binary_node<T>* &node){
+void binary_tree<T>::trans_BST_to_AVL(binary_node<T>* &node){
     if(node == nullptr) return;
-    trans_to_AVL(node->left);
-    trans_to_AVL(node->right);
+    trans_BST_to_AVL(node->left);
+    trans_BST_to_AVL(node->right);
     rebalance(node);
+}
+
+//将二叉排序树转化为红黑树
+template<typename T>
+void binary_tree<T>::trans_BST_to_RBT(binary_node<T>* &node) {
+    trans_BST_to_AVL(node);
+    trans_AVL_to_RBT(root);
+    root->is_red = true;
+}
+
+template<typename T>
+void binary_tree<T>::trans_AVL_to_RBT(binary_node<T>* &node){
+    if (node == nullptr) return;
+    root->parent = nullptr;
+    binary_node<T>* curr = node;
+    while (curr->parent != nullptr) curr = curr->parent;
+    curr->is_red = false;
+    while (curr != nullptr) {
+        if (curr->left != nullptr && curr->left->is_red && curr->right != nullptr && curr->right->is_red) {
+            curr->is_red = true;
+            curr->left->is_red = false;
+            curr->right->is_red = false;
+        } else if (curr->left != nullptr && curr->left->is_red && curr->left->left != nullptr && curr->left->left->is_red) {
+            curr = right_rotate(curr);
+            curr->is_red = false;
+            curr->right->is_red = true;
+        } else if (curr->left != nullptr && curr->left->is_red && curr->left->right != nullptr && curr->left->right->is_red) {
+            curr = right_left_rotate(curr);
+            curr->is_red = false;
+            curr->right->is_red = true;
+        } else if (curr->right != nullptr && curr->right->is_red && curr->right->left != nullptr && curr->right->left->is_red) {
+            curr = left_right_rotate(curr);
+            curr->is_red = false;
+            curr->left->is_red = true;
+        } else if (curr->right != nullptr && curr->right->is_red && curr->right->right != nullptr && curr->right->right->is_red) {
+            curr = left_rotate(curr);
+            curr->is_red = false;
+            curr->left->is_red = true;
+        } else {
+            curr = curr->parent;
+        }
+    }
 }

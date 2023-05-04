@@ -17,8 +17,6 @@ int main()
     binary_tree<char> c;
     c.create_BST(b, cmp_char);
     c.traverse(1, visit_char);
-    c.trans_to_AVL(c.root);
-    cout<<c.root->val<<endl;
+    c.trans_BST_to_RBT(c.root);
     c.traverse(1, visit_char);
-
 }
