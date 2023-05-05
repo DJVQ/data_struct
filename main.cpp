@@ -5,6 +5,11 @@
  
 int main()
 {
-    single_hungry* ins = single_hungry::get_instance();
-    return 0;
+    shared_ptr<car> car_ = make_shared<car>();
+    car_->move();
+    cout<<"__________________"<<endl;
+    shared_ptr<robot> robot_ = make_shared<robot>(car_);
+    robot_->move();
+    robot_->say();
+
 }

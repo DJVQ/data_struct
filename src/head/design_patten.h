@@ -148,3 +148,45 @@ void women_observer::update(){
         cout<<"the women will do somthing"<<endl;
     }
 }
+
+//裝飾器模式
+class transform{
+    public:
+        virtual void move() = 0;
+};
+class car : public transform{//本体
+    public:
+        car(){
+            cout<<"this is a car"<<endl;
+        }
+        void move(){
+            cout<<"move on the road"<<endl;
+        }
+};
+class changer : public transform{//装饰器
+    public:
+        changer(shared_ptr<transform> transform_in) : transform_(transform_in){};
+        void move(){
+            transform_->move();
+        }
+    private:
+        shared_ptr<transform> transform_;
+};
+class robot : public changer{
+    public:
+        robot(shared_ptr<transform> transform_) : changer(transform_){
+            cout<<"change to robat"<<endl;
+        }
+        void say(){
+            cout<<"the robot say something"<<endl;
+        }
+};
+class plane : public changer{
+    public:
+        plane(shared_ptr<transform> transform_) :changer(transform_){
+            cout<<"change to plane"<<endl;
+        }
+        void say(){
+            cout<<"the plane say something"<<endl;
+        }
+};

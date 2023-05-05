@@ -8,6 +8,7 @@ _Pragma("once")
 #include <list>
 #include <algorithm>
 #include <mutex>
+#include <memory>
 using namespace std;
 
 static const int d = 100;
